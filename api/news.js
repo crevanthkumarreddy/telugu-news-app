@@ -42,22 +42,32 @@ export default async function handler(req, res) {
           item.match(/<description>(.*?)<\/description>/)?.[1] ||
           '';
 
+        // Extract image from description if available
         const imgMatch = description.match(/<img[^>]+src="([^"]+)"/);
         const image = imgMatch ? imgMatch[1] : null;
 
-        const cleanDesc = description
-          .replace(/<[^>]+>/g, '')
-          .trim()
-          .substring(0, 200);
+        // Clean description — strip all HTML tags
+        const cleanDesc = description.replace(/<[^>]+>/g, '').trim();
 
-        if (title) {
+        // Only keep description if it has real text (not just a URL or empty)
+        const isUseful = cleanDesc.length > 20 && !cleanDesc.startsWith('http');
+        const finalDesc = isUseful ? cleanDesc.substring(0, 200) : '';
+
+        // Clean up title
+        const cleanTitle = title
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/\s*-\s*Eenadu\s*$/, '')
+          .replace(/\s*-\s*Andhra Jyothi\s*$/, '')
+          .replace(/\s*-\s*ETV Bharat\s*$/, '')
+          .trim();
+
+        if (cleanTitle) {
           allNews.push({
             id: Math.random().toString(36).substr(2, 9),
-            title: title
-              .replace(/&amp;/g, '&')
-              .replace(/&lt;/g, '<')
-              .replace(/&gt;/g, '>'),
-            description: cleanDesc,
+            title: cleanTitle,
+            description: finalDesc,
             link,
             pubDate,
             source: source.name,
