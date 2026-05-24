@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Telugu News</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #c0392b;
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    header h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+    header span { font-size: 13px; opacity: 0.85; }
+
+    .counter {
+      text-align: center;
+      padding: 10px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .card-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      max-width: 560px;
+      width: 100%;
+      overflow: hidden;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-image {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      background: #e8e8e8;
+      display: block;
+    }
+
+    .card-image-placeholder {
+      width: 100%;
+      height: 160px;
+      background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+    }
+
+    .card-body { padding: 20px; }
+
+    .source-badge {
+      display: inline-block;
+      background: #fff0f0;
+      color: #c0392b;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .card-desc {
+      font-size: 14px;
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    .card-time {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .read-more {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 8px 18px;
+      background: #c0392b;
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+    }
+
+    .btn {
+      padding: 12px 28px;
+      border: none;
+      border-radius: 50px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-prev {
+      background: white;
+      color: #c0392b;
+      border: 2px solid #c0392b;
+    }
+
+    .btn-next {
+      background: #c0392b;
+      color: white;
+    }
+
+    .btn:hover { transform: scale(1.04); }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: #888;
+      font-size: 16px;
+    }
+
+    .loading .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #eee;
+      border-top-color: #c0392b;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error {
+      text-align: center;
+      padding: 40px 20px;
+      color: #c0392b;
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      padding: 10px 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .filter-btn {
+      flex-shrink: 0;
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 1.5px solid #ddd;
+      background: white;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn.active {
+      background: #c0392b;
+      color: white;
+      border-color: #c0392b;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>📰 Telugu News</h1>
+    <span id="fetch-time"></span>
+  </header>
+
+  <div class="filters">
+    <button class="filter-btn active" onclick="filterBy('All')">All</button>
+    <button class="filter-btn" onclick="filterBy('Eenadu')">Eenadu</button>
+    <button class="filter-btn" onclick="filterBy('Andhra Jyothi')">Andhra Jyothi</button>
+    <button class="filter-btn" onclick="filterBy('ETV Bharat')">ETV Bharat</button>
+  </div>
+
+  <div class="counter" id="counter"></div>
+
+  <div class="card-wrapper" id="card-wrapper">
+    <div class="loading">
+      <div class="spinner"></div>
+      వార్తలు లోడ్ అవుతున్నాయి...
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-prev" id="btn-prev" onclick="prevCard()" disabled>◀ Previous</button>
+    <button class="btn btn-next" id="btn-next" onclick="nextCard()" disabled>Next ▶</button>
+  </div>
+
+  <script>
+    let allNews = [];
+    let filteredNews = [];
+    let currentIndex = 0;
+    let activeFilter = 'All';
+
+    async function loadNews() {
+      try {
+        const res = await fetch('/api/news');
+        const data = await res.json();
+        allNews = data.news || [];
+        if (data.fetched) {
+          const d = new Date(data.fetched);
+          document.getElementById('fetch-time').textContent =
+            d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+        }
+        filterBy('All');
+      } catch (e) {
+        document.getElementById('card-wrapper').innerHTML =
+          '<div class="error">❌ వార్తలు లోడ్ కాలేదు. మళ్ళీ ప్రయత్నించండి.</div>';
+      }
+    }
+
+    function filterBy(source) {
+      activeFilter = source;
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.toggle('active', b.textContent === source);
+      });
+      filteredNews = source === 'All' ? allNews : allNews.filter(n => n.source === source);
+      currentIndex = 0;
+      showCard();
+    }
+
+    function showCard() {
+      const wrapper = document.getElementById('card-wrapper');
+      const counter = document.getElementById('counter');
+
+      if (filteredNews.length === 0) {
+        wrapper.innerHTML = '<div class="error">వార్తలు లేవు.</div>';
+        counter.textContent = '';
+        document.getElementById('btn-prev').disabled = true;
+        document.getElementById('btn-next').disabled = true;
+        return;
+      }
+
+      const news = filteredNews[currentIndex];
+      counter.textContent = `${currentIndex + 1} / ${filteredNews.length}`;
+
+      const timeStr = news.pubDate
+        ? new Date(news.pubDate).toLocaleString('en-IN', {
+            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+          })
+        : '';
+
+      const imageHtml = news.image
+        ? `<img class="card-image" src="${news.image}" alt="news" onerror="this.style.display='none'" />`
+        : `<div class="card-image-placeholder">📰</div>`;
+
+      wrapper.innerHTML = `
+        <div class="card">
+          ${imageHtml}
+          <div class="card-body">
+            <span class="source-badge">${news.source}</span>
+            <div class="card-title">${news.title}</div>
+            ${news.description ? `<div class="card-desc">${news.description}</div>` : ''}
+            ${timeStr ? `<div class="card-time">🕐 ${timeStr}</div>` : ''}
+            ${news.link ? `<a class="read-more" href="${news.link}" target="_blank">పూర్తి వార్త చదవండి →</a>` : ''}
+          </div>
+        </div>`;
+
+      document.getElementById('btn-prev').disabled = currentIndex === 0;
+      document.getElementById('btn-next').disabled = currentIndex === filteredNews.length - 1;
+    }
+
+    function nextCard() {
+      if (currentIndex < filteredNews.length - 1) {
+        currentIndex++;
+        showCard();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function prevCard() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        showCard();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight') nextCard();
+      if (e.key === 'ArrowLeft') prevCard();
+    });
+
+    loadNews();
+  </script>
+
+</body>
+</html>
